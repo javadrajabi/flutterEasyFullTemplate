@@ -2,10 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:template/models/login/UserData.dart';
-import 'package:template/models/login/VerifyCode.dart';
+import 'package:template/data/models/login/UserData.dart';
+import 'package:template/data/models/login/VerifyCode.dart';
 import 'package:template/data/webService/httpRequest.dart';
-import 'package:template/provider/baseVar.dart';
 
 import 'constants/preferences.dart';
 
@@ -18,7 +17,10 @@ class SharedPreferenceHelper {
 
   static const String keyUsername = "key_username";
 
-  static Future<void> init() async => _sharedPreference ??= await SharedPreferences.getInstance();
+  static Future<void> init() async {
+    _sharedPreference = await SharedPreferences.getInstance();
+  }
+
 
   String get username => _sharedPreference!.getString(keyUsername) ?? "";
 
@@ -27,14 +29,24 @@ class SharedPreferenceHelper {
   }
 
   // General Methods: ----------------------------------------------------------
-  Future<String?> get authToken async {
+  static Future<String?> get authToken async {
     return _sharedPreference!.getString(Preferences.auth_token);
   }
 
-  Future<bool> saveAuthToken(String authToken) async {
+  static Future<bool> saveAuthToken(String authToken) async {
     return _sharedPreference!.setString(Preferences.auth_token, authToken);
   }
+  static Future<String?> getAuthToken() async {
+    return _sharedPreference!.getString(Preferences.auth_token);
+  }
 
+  static bool isSetAuthToken() {
+    if (_sharedPreference!.containsKey(Preferences.auth_token)) {
+      return true;
+    } else {
+      return false;
+    }
+  }
   Future<bool> removeAuthToken() async {
     return _sharedPreference!.remove(Preferences.auth_token);
   }
@@ -49,30 +61,26 @@ class SharedPreferenceHelper {
   }
 
   // Theme:------------------------------------------------------
-  bool get isDarkMode {
+  static bool get isDarkMode {
     return _sharedPreference!.getBool(Preferences.is_dark_mode) ?? false;
   }
 
-  Future<void> changeBrightnessToDark(bool value) {
+  static Future<void> changeBrightnessToDark(bool value) {
     return _sharedPreference!.setBool(Preferences.is_dark_mode, value);
   }
 
   // Language:---------------------------------------------------
-  String? get currentLanguage {
+  static String? get currentLanguage {
     return _sharedPreference!.getString(Preferences.current_language);
   }
 
-  Future<void> changeLanguage(String language) {
+  static Future<void> changeLanguage(String language) {
     return _sharedPreference!.setString(Preferences.current_language, language);
   }
 
-
-
 // constants/strings.dart
 
-
   static String? getString(String name) {
-
     return _sharedPreference!.getString(name);
   }
 
@@ -143,15 +151,16 @@ class SharedPreferenceHelper {
 
   static Future<UserData> getUserDatas(key) async {
     // final myStorage = await SharedPreferences.getInstance();
-    return UserData.fromJson(jsonDecode(_sharedPreference!.getString(key).toString()));
+    return UserData.fromJson(
+        jsonDecode(_sharedPreference!.getString(key).toString()));
   }
 
   ///////////////////////////////
 
   static Future setUserData(VerifyCode? value) async {
-
     // final myStorage = await SharedPreferences.getInstance();
-    return _sharedPreference!.setString("userData", jsonEncode(value!.toJson()));
+    return _sharedPreference!
+        .setString("userData", jsonEncode(value!.toJson()));
   }
 
   static Future<VerifyCode?> getUserData(value) async {
@@ -161,46 +170,39 @@ class SharedPreferenceHelper {
   }
 
 
-  static Future<bool> isSetToken() async {
-    if ( _sharedPreference!.containsKey('userData')) {
-      print('1111111111111111111111111');
-      var res = await SharedPreferenceHelper.getUserData('userData');
-      HttpRequest.token = res!.access_token!;
-      BaseVar.userData = res;
-      return true;
-      // UserData.fromJson(res);
-    } else {
-      print('2222222222222222222222222');
-      return false;
-    }
-  }
-  static Future <bool> deleteDefaultIMEI()async{
+  static Future<bool> deleteDefaultIMEI() async {
     // final myStorage = await SharedPreferences.getInstance();
     return _sharedPreference!.remove('selectetdIMEI');
   }
-  static Future <Map> getDefaultIMEI()async{
+
+  static Future<Map> getDefaultIMEI() async {
     // final myStorage = await SharedPreferences.getInstance();
     return json.decode(_sharedPreference!.getString('selectetdIMEI')!);
   }
-  static Future setDefaultIMEI(Map imei)async{
+
+  static Future setDefaultIMEI(Map imei) async {
     // final myStorage = await SharedPreferences.getInstance();
-    return _sharedPreference!.setString('selectetdIMEI',json.encode(imei));
+    return _sharedPreference!.setString('selectetdIMEI', json.encode(imei));
   }
 
-  static Future <bool> isDefaultIMEI()async {
+  static Future<bool> isDefaultIMEI() async {
     return await containsKey('selectetdIMEI');
   }
-  static Future setPassword(String pass)async {
+
+  static Future setPassword(String pass) async {
     // final myStorage = await SharedPreferences.getInstance();
-    return _sharedPreference!.setString('password',pass);
+    return _sharedPreference!.setString('password', pass);
   }
-  static Future getPassword()async {
+
+  static Future getPassword() async {
     // final myStorage = await SharedPreferences.getInstance();
     return _sharedPreference!.getString('password');
   }
-  static Future <bool> isPasswordSet()async {
+
+  static Future<bool> isPasswordSet() async {
     return await containsKey('password');
   }
+
   static Future<bool> removePassword() async {
     // final myStorage = await SharedPreferences.getInstance();
     return _sharedPreference!.remove('password');

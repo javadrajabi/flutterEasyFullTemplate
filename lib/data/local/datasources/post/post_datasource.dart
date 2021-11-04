@@ -1,6 +1,6 @@
 import 'package:template/data/local/constants/db_constants.dart';
-import '../../../../models/post/post.dart';
-import '../../../../models/post/post_list.dart';
+import '../../../../data/models/post/post.dart';
+import '../../../../data/models/post/post_list.dart';
 import 'package:sembast/sembast.dart';
 
 class PostDataSource {

@@ -1,6 +1,4 @@
 import 'package:template/models/login/VerifyCode.dart';
-
-import '../../../models/login/UserData.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 

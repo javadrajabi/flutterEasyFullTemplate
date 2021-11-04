@@ -1,4 +1,3 @@
-import 'dart:convert';
 
 /// status : "OK"
 /// notification_list : {"current_page":2,"data":[{"imeiName":"talisman1","id":1,"text":"سرعت بیش از حد مجاز تعیین شده","color":"red","icon":"battery","notification_text_id":3,"imei_id":2,"seen":"1","comment":null,"created_at":null,"updated_at":null},{"imeiName":"talisman1","id":2,"text":"بانری خودرو قطع شد","color":"red","icon":"battery","notification_text_id":1,"imei_id":2,"seen":"0","comment":null,"created_at":null,"updated_at":null}],"first_page_url":"http://vesga.local/api/1.0/app/get-notification?page=1","from":3,"next_page_url":"http://vesga.local/api/1.0/app/get-notification?page=3","path":"http://vesga.local/api/1.0/app/get-notification","per_page":2,"prev_page_url":"http://vesga.local/api/1.0/app/get-notification?page=1","to":4}

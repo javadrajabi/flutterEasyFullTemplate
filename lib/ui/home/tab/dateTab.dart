@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:template/ui/home/component/workOut.dart';
+import 'package:template/ui/home/tab/dateTab/turnList.dart';
 
-import '../../app_theme.dart';
+
 
 class DateTab extends StatefulWidget {
   const DateTab({Key? key}) : super(key: key);
@@ -11,50 +11,89 @@ class DateTab extends StatefulWidget {
 }
 
 class _DateTabState extends State<DateTab> {
-  int _currentIndex = 0;
+
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      initialIndex: 0,
-      child: Scaffold(
-        appBar: TabBar(indicatorColor: Colors.blue,
-          onTap: (x) {
-            print('11111111111------$x');
-            setState(() {
-              _currentIndex = x;
-            });
-          },
-          tabs: [
-            Tab(
-              icon: Text(
-                'نوبت های آینده',
-                style: TextStyle(
-                    color: _currentIndex == 0 ? Colors.blue : Colors.grey),
-              ),
+    return Stack(
+      alignment: Alignment.bottomLeft,
+      children: [
+        DefaultTabController(
+          length: 2,
+          initialIndex: 0,
+          child: Scaffold(
+            appBar: TabBar(
+              indicatorColor: Colors.blue,
+              labelColor: Colors.blue,
+              // labelStyle: TextStyle(color: Colors.blue),
+              unselectedLabelColor: Colors.grey,
+              // onTap: (x) {
+              //   print('11111111111------$x');
+              //   setState(() {
+              //     _currentIndex = x;
+              //   });
+              // },
+              tabs: [
+                Tab(
+                  icon: Stack(
+                    alignment: Alignment.topLeft,
+                    children: [
+                      Text(
+                        '     نوبت های آینده     ',
+                        // style: TextStyle(
+                        //     color: _currentIndex == 0 ? Colors.blue : Colors.grey),
+                      ),
+                      Container(
+                        width: 15,
+                        height: 15,
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                            border: Border.all(
+                              color: Colors.red,
+                            ),
+                            borderRadius: BorderRadius.all(Radius.circular(20))
+                        ),
+                        child: Center(child: Text('2',style: TextStyle(fontSize: 10,color: Colors.white))),)
+                    ],
+                  ),
+                ),
+                Tab(
+                    icon: Text(
+                  'تاریخچه',
+                  // style: TextStyle(
+                  //     color: _currentIndex == 1 ? Colors.blue : Colors.grey),
+                )),
+              ],
             ),
-            Tab(
-                icon: Text(
-              'تاریخچه',
-              style: TextStyle(
-                  color: _currentIndex == 1 ? Colors.blue : Colors.grey),
-            )),
-          ],
+            body: TabBarView(
+              children: [
+                TurnList(),
+                // Center(
+                //     child: Text('اطلاعاتی وجود ندارد.',
+                //         style: TextStyle(color: Colors.grey))),
+                Center(
+                    child: Text(
+                  'اطلاعاتی وجود ندارد.',
+                  style: TextStyle(color: Colors.grey),
+                )),
+              ],
+            ),
+          ),
         ),
-        body: const TabBarView(
-          children: [
-            Center(
-                child: Text('اطلاعاتی وجود ندارد.',
-                    style: TextStyle(color: Colors.grey))),
-            Center(
-                child: Text(
-              'اطلاعاتی وجود ندارد.',
-              style: TextStyle(color: Colors.grey),
-            )),
-          ],
+        Padding(
+          padding: const EdgeInsets.only(bottom: 70,right: 20,left: 20),
+          child:SizedBox(
+              height: 50.0,
+              width: 50.0,
+              child: FittedBox(
+                  child: FloatingActionButton(
+                      heroTag: "btn81",
+              backgroundColor: Colors.green,
+              onPressed: () {},
+              child: Icon(Icons.filter_alt_sharp, color: Colors.white)))),
+
         ),
-      ),
+      ],
     );
 
     //   SingleChildScrollView(

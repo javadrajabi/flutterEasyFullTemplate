@@ -2,16 +2,9 @@ import 'dart:convert';
 
 import 'package:template/models/status/DeviceList.dart';
 import 'package:template/models/status/Imei.dart';
-import 'package:template/models/status/LastAssign.dart';
 import 'package:template/models/status/LastState.dart';
 import 'package:http/http.dart' as http;
 import '../httpRequest.dart';
-import '../../webService/apiReponse.dart';
-import 'package:flutter/material.dart';
-import '../../../models/status/Verification.dart';
-import '../../../models/login/VerifyCode.dart';
-import '../../../models/login/UserData.dart';
-import 'package:http/http.dart';
 
 class ApiStatus {
   ApiStatus._();

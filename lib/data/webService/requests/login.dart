@@ -1,81 +1,39 @@
 import 'dart:async';
-
-import '../../../provider/baseVar.dart';
-
+import 'package:template/data/models/login/verify.dart';
+import '../../repository.dart';
 import '../httpRequest.dart';
-import '../../webService/apiReponse.dart';
 import 'package:flutter/material.dart';
-import '../../../models/status/Verification.dart';
-import '../../../models/login/VerifyCode.dart';
-import '../../../models/login/UserData.dart';
-import 'package:http/http.dart';
+import '../../../data/models/login/Verification.dart';
+import '../../../data/models/login/UserData.dart';
 
 class ApiLogin {
   ApiLogin._();
 
-  static Future<Verification?> phoneVerification(
+  static Future<Verification?> sendCode(
       {required String mobile}) async {
-    String path = '/auth/sendcode';
-    Map? res = await HttpRequest.post(path: path, body: {'mobile': mobile});
+    String path = '/user/send-code';
+    Map? res = await HttpRequest.post(path: path, body: {'mobile-number': mobile},withToken: false);
     if (res != null) {
-      if(res['status_code']=='OK'){
-        return Verification.fromJson(res);
-      }else{
-        return Future.error(res['status_message']);
-      }
-    } else {
-      return null;
+        return Verification.fromJson(res['data']);
     }
   }
 
-  static Future<VerifyCode?> verifyCode(
+  static Future<Verify?> signIn(
       {String? mobile, String? hash, String? code}) async {
-
-    String path = '/auth/signin';
-    bool haveError=false;
+    String path = '/user/login';
     Map? res = await HttpRequest.post(
-        path: path, body: {'mobile': mobile, 'hash': hash, 'code': code}).onError((error, stackTrace)  {
-      haveError=true;
-
-    });
-
-    if (haveError != true) {
-        return VerifyCode.fromJson(res!);
-      } else {
-        return Future.error(res!['message']);
-      }
-
-  }
-
-  static Future<VerifyCode?> signUp(
-      {String? mobile,
-      String? hash,
-      String? code,
-      String? gender,
-      String? firstname,
-      String? lastname}) async {
-    String path = '/auth.signUp';
-    Map? res = await HttpRequest.post(path: path, body: {
-      'mobile': mobile,
-      'hash': hash,
-      'code': code,
-      'gender': gender,
-      'firstname': firstname,
-      'lastname': lastname
-    });
-    if (res != null) {
-      BaseVar.userData = VerifyCode.fromJson(res);
-      HttpRequest.token = BaseVar.userData.access_token!;
-      return BaseVar.userData;
-    } else {
-      return null;
+        path: path, body: {'mobile-number': mobile, 'hash': hash, 'code': code},withToken: false);
+    if (res != null && res['success']=="true") {
+      Repository.saveToken(res['data']['token_access']);
+      return Verify.fromJson(res['data']);
     }
+
   }
 
   static Future<UserData?> signOut(context) async {
     String path = '/auth.signOut';
 
-    await HttpRequest.get(path: path);
+    await HttpRequest.get(path: path,withToken: false);
 
     Navigator.of(context).pushNamed('/login');
   }

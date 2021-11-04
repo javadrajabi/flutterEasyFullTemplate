@@ -1,7 +1,6 @@
 import '../../../models/projects/Projects.dart';
 import 'package:flutter/cupertino.dart';
 import '../httpRequest.dart';
-import '../requests/projects.dart';
 
 class ApiProjects {
   ApiProjects._();

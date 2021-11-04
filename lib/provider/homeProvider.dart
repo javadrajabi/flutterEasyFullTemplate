@@ -1,139 +1,130 @@
-import 'dart:async';
-import 'dart:convert';
+import 'dart:developer';
 
-import 'package:template/data/sharedpref/shared_preference_helper.dart';
-import 'package:template/models/status/DeviceList.dart';
-import 'package:template/models/status/Imei.dart';
-import 'package:template/models/status/LastAssign.dart';
-import 'package:template/models/status/LastState.dart';
-import 'package:template/data/webService/requests/status-api.dart';
 import 'package:flutter/material.dart';
+import 'package:persian_datetime_picker/persian_datetime_picker.dart';
+import 'package:template/data/webService/requests/member.dart';
+import 'package:template/data/models/member/appointment_list.dart';
+import 'package:template/data/models/member/profile.dart';
+import 'package:template/data/models/member/reserve_list.dart';
+import 'package:template/data/models/member/service_provider_list.dart';
+import 'package:template/data/models/member/services_list.dart';
+import 'package:template/data/models/member/services_provider.dart';
+import 'package:template/data/models/member/zarfiyat_list.dart';
 
 class HomeP with ChangeNotifier {
-  bool shield = false, carStatus = false;
-  String address = 'نامشخص';
-  int notificationCount = 0;
-  DeviceList? devices = DeviceList();
-  LastAssign? lastState =
-      LastAssign(imei: '114141414141', spd: 0, suc: '0', cs: '0', dbs: 50);
-  Imei? selectedImei = Imei();
-  Map weather = {
-    'main': {'temp': 273, 'humidity': 50},
-    'name': 'no loc',
-    'weather': [
-      {'icon': "04d"}
-    ]
-  };
-  bool timerIsRun = false;
+  Profile? profile;
+  List<Appointment>? appointments;
+  ServicesList? services;
+  ServicesProviderList? servicesProviders;
+  List<ServicesProvider>? specialServicesProviders;
+  List<ServicesProvider>? filterdedServices;
+  List<Zarfiyat>? zarfiyatList;
+  List<Reserve>? reserveList;
 
-  init() async {
-    timer();
-    getDevicelist();
-    if (await SharedPreferenceHelper.isDefaultIMEI()) {
-      getLastStatus();
-    }
+  getProfile() {
+    print('getProfile');
+    ApiMember.getProfile().then((value) {
+      profile = value;
+      notifyListeners();
+    });
   }
 
-  timer() {
-    // LocalShP.deleteSelectedIMEI();
-    if (timerIsRun == false) {
-      timerIsRun = true;
-      const oneSec = const Duration(seconds: 10);
-      Timer.periodic(oneSec, (Timer t) async {
-        if (await SharedPreferenceHelper.isDefaultIMEI()) {
-          getLastStatus();
-        } else {
-          getDevicelist();
+  getAppointments(Map<String, dynamic> map) {
+    map['mindate']=Jalali.now().formatCompactDate();
+    map['order']='reserve_date';
+    map['limit']='10';
+
+    ApiMember.getAppointmentList(filters: map).then((value) {
+      print('getAppointments');
+      appointments = value?.data??[];
+
+      // log(value?.toJson().toString()??'');
+      notifyListeners();
+    });
+  }
+
+  getServices(Map<String, dynamic> map) {
+    print('getServices');
+    ApiMember.getServicesList(filters: map).then((value) {
+      services = value;
+      notifyListeners();
+    });
+  }
+
+  getServicesProvider(Map<String, dynamic> map) {
+    print('getServicesProvider');
+    ApiMember.getServicesProviderList(filters: map).then((value) {
+      servicesProviders = value;
+      filterdedServices = value?.data ?? [];
+      // log(value?.toJson().toString()??'');
+      notifyListeners();
+    });
+  }
+
+  filterServiceByString(String name) {
+    print('filterServiceByString: ' + name);
+    filterdedServices = servicesProviders!.data!.where((i) {
+      if (i.name != null) {
+        if (i.name!.contains(name)) {
+          return true;
         }
-      });
-    }
-  }
-
-  setDefaultImei(Imei dev) async {
-    selectedImei = Imei.fromJson(dev.toJson());
-    await SharedPreferenceHelper.setDefaultIMEI(dev.toJson());
-    pcounter = 0;
-    counter = 0;
-    getLastStatus();
-  }
-
-  getDevicelist() async {
-    devices = await ApiStatus.deviceList();
-    if (!(await SharedPreferenceHelper.isDefaultIMEI())) {
-      selectedImei = Imei.fromJson(devices!.device_list![0].imei!.toJson());
-      await SharedPreferenceHelper.setDefaultIMEI(devices!.device_list![0].imei!.toJson());
-    }
-    if (devices != null) {
-      devices!.device_list!.forEach((element) {
-        print(element.id.toString() +
-            '@@@@@' +
-            (selectedImei?.id.toString() ?? 'no'));
-        if (element.imei!.id == selectedImei!.id) {
-
-            setDefaultImei(Imei.fromJson(element.imei!.toJson()));
-
-        }
-      });
-    }
-
-    getLastStatus();
+        return false;
+      }
+      return false;
+    }).toList();
     notifyListeners();
   }
 
-  getLastStatus() async {
-    var r = await SharedPreferenceHelper.getDefaultIMEI();
-    print('-------------getLastStatus');
-
-    selectedImei = Imei.fromJson(r);
-    LastState lastSate = await ApiStatus.lastAssign(imei: selectedImei!.imei);
-    print(lastSate.last_assign!.toJson());
-    notificationCount = lastSate.notification_count!;
-    lastState = lastSate.last_assign!;
-    getaddress();
-    showWeather();
-    print('-------------********');
-    print(lastSate.toJson());
-    notifyListeners();
+  getSpecialServicesProvider(List sids) {
+    ApiMember.getSpecialServicesProviderList(sids: sids).then((value) {
+      specialServicesProviders = value?.data ?? [];
+      // log(value?.toJson().toString()??'');
+      notifyListeners();
+    });
   }
 
-  int pcounter = 0;
-
-  getaddress() {
-    if (pcounter == 0) if (lastState != null)
-      ApiStatus.positionToAddress(lat: lastState!.lat, lng: lastState!.lon)
-          .then((value) {
-        // print('value22222222222222222222222222222222'+value);
-        address = value;
-        notifyListeners();
-      });
-
-    pcounter++;
-    if (pcounter == 2) {
-      pcounter = 0;
+  getZarfiyatList(
+      {String? date, required List serviceIds, required String spId}) {
+    zarfiyatList = [];
+    Map body = {
+      "service-ids": serviceIds.toString(),
+      "sp_id": spId,
+    };
+    if (date != null) {
+      body['date'] = date;
     }
+    ApiMember.getZarfiyatList(body: body).then((value) {
+      zarfiyatList = value?.data ?? [];
+      // log(value?.toJson().toString()??'');
+      notifyListeners();
+    });
   }
 
-  int counter = 0;
-
-  showWeather() async {
-    if (counter == 0)
-      ApiStatus.getWeather(lat: lastState!.lat, lng: lastState!.lon)
-          .then((value) {
-        print('wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww' + value.toString());
-        weather = value;
-        notifyListeners();
-      });
-    counter++;
-    if (counter == 100) {
-      counter = 0;
-    }
+  getReserveList(
+      {String? date, required List serviceIds, required String spId}) {
+    Map body = {
+      "service-ids": serviceIds.toString(),
+      "sp_id": spId,
+      "date": date
+    };
+    ApiMember.getReserveList(body: body).then((value) {
+      reserveList = value?.data ?? [];
+      // log(value?.toJson().toString()??'');
+      notifyListeners();
+    });
   }
 
-  deviceRename(int index, String name) {
-    devices!.device_list![index].imei!.name = name;
-
-    getDevicelist();
-    notifyListeners();
+  updateProfile({required String fname, required String lname}) {
+    print('getProfile');
+    ApiMember.updateProfile(body: {"fname": fname, "lname": lname})
+        .then((value) {
+      profile = value;
+      notifyListeners();
+    });
   }
-
+  Future <String> addAppointment({required int reserve_id, required List selected_service_id}) async{
+    print('addAppointment');
+  final res=  await ApiMember.addAppointment(body: {"reserve_id": reserve_id.toString(), "selected_service_id": selected_service_id.toString()});
+        return "نوبت برا شما ثبت شد";
+  }
 }

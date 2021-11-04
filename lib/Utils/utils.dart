@@ -2,9 +2,6 @@ import 'package:connectivity/connectivity.dart';
 import '../config/languages/localization/app_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-// import 'package:package_info/package_info.dart';
-// import 'package:permission_handler/permission_handler.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class Utils {
   Utils._();

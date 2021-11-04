@@ -1,24 +1,28 @@
 import 'dart:convert';
-import '../../../models/login/UserData.dart';
-import '../../../provider/baseVar.dart';
-
-import '../webService/apiReponse.dart';
-import 'package:flutter/cupertino.dart';
-import '../../config/config.dart';
-
-import 'package:http/http.dart';
+import 'dart:developer';
 import 'package:http/http.dart' as http;
+import '../repository.dart';
+import 'error_handler.dart';
 
 class HttpRequest {
   HttpRequest._();
 
-  static String token = '';
+  // static String token = '';
 
-  static Future getFullURL({required String path, Map? body, bool? withToken,Map? sheader}) async {
+  static Future getFullURL(
+      {required String path,
+      Map? body,
+      bool? withToken,
+      Map? sheader,
+      bool? showLoading}) async {
+    showLoading = showLoading ?? false;
+    if(showLoading){
+      Repository.showLoadingAlert();
+    }
     body = body ?? {};
-    withToken = withToken ?? false;
+    withToken = withToken ?? true;
     String strBody = '';
-    sheader=sheader?? {};
+    sheader = sheader ?? {};
     body.forEach((key, value) {
       strBody = strBody + key + '=' + value + '&';
       print(strBody);
@@ -32,26 +36,30 @@ class HttpRequest {
       'Accept': 'application/json',
     };
     if (withToken) {
-      header['Authorization'] = 'Bearer $token';
+      header['Authorization'] = 'Bearer ' + Repository.deviceToken!;
     }
-    if(sheader != {}){
+    if (sheader != {}) {
       sheader.forEach((key, value) {
-        header[key]=value;
-    });
+        header[key] = value;
+      });
     }
 
     print('*** BODY IN GET REQUEST ***');
     print(path + strBody);
     // try {
     // String encodedURL=Uri.encodeFull(Config.BaseURL + path + strBody);
-    var url = Uri.parse( path + strBody);
+    var url = Uri.parse(path + strBody);
     var response = await http.get(url, headers: header);
+    if(showLoading){
+      Repository.closeLoadingAlert();
+    }
     print('Response status: ${response.statusCode}');
     print('Response body: ${response.body}');
     if (HttpRequest.isSuccessful(response.statusCode)) {
       return response.body;
     } else {
-      return Future.error(response.body);
+      ErrorHandler.analize(response);
+      // return Future.error(response.body);
     }
 
     // } catch (e) {
@@ -60,9 +68,18 @@ class HttpRequest {
     //   return Future.error({'message':'cannot connect to server.'});
     // }
   }
-  static Future get({required String path, Map? body, bool? withToken}) async {
+
+  static Future get(
+      {required String path,
+      Map? body,
+      bool? withToken,
+      bool? showLoading}) async {
+    showLoading = showLoading ?? false;
+    if(showLoading){
+      Repository.showLoadingAlert();
+    }
     body = body ?? {};
-    withToken = withToken ?? false;
+    withToken = withToken ?? true;
     String strBody = '';
     body.forEach((key, value) {
       strBody = strBody + key + '=' + value + '&';
@@ -77,21 +94,26 @@ class HttpRequest {
       'Accept': 'application/json',
     };
     if (withToken) {
-      header['Authorization'] = 'Bearer $token';
+      header['Authorization'] = 'Bearer ' + Repository.deviceToken!;
     }
 
     print('*** BODY IN GET REQUEST ***');
-    print(Config.BaseURL + path + strBody);
+    print(Repository.BaseURL + path + strBody);
     // try {
     // String encodedURL=Uri.encodeFull(Config.BaseURL + path + strBody);
-    var url = Uri.parse(Config.BaseURL + path + strBody);
+    var url = Uri.parse(Repository.BaseURL + path + strBody);
     var response = await http.get(url, headers: header);
+    if(showLoading){
+      Repository.closeLoadingAlert();
+    }
     print('Response status: ${response.statusCode}');
-    print('Response body: ${response.body}');
+    print(Repository.BaseURL + path + strBody);
+    log('Response body: ${response.body}');
     if (HttpRequest.isSuccessful(response.statusCode)) {
       return jsonDecode(response.body);
     } else {
-      return Future.error(jsonDecode(response.body));
+      ErrorHandler.analize(response);
+      // return Future.error(jsonDecode(response.body));
     }
 
     // } catch (e) {
@@ -100,67 +122,93 @@ class HttpRequest {
     //   return Future.error({'message':'cannot connect to server.'});
     // }
   }
+
   static Future<Map?> post(
-      {required String path, required Map? body, bool? withToken}) async {
-    withToken = withToken ?? false;
+      {required String path,
+      required Map? body,
+      bool? withToken,
+      bool? showLoading}) async {
+    showLoading = showLoading ?? false;
+    if(showLoading){
+      Repository.showLoadingAlert();
+    }
+    withToken = withToken ?? true;
     var header = {
       // 'Content-Type': 'application/json',
       'Accept': 'application/json',
     };
 
     if (withToken) {
-      header['Authorization'] = 'Bearer $token';
+      header['Authorization'] = 'Bearer ' + Repository.deviceToken!;
     }
     print('*** BODY IN POST REQUEST ***');
     print(json.encode(body));
-    print(Config.BaseURL + path);
+    print(Repository.BaseURL + path);
     try {
-      var url = Uri.parse(Config.BaseURL + path);
+      var url = Uri.parse(Repository.BaseURL + path);
       print(url);
       var response = await http.post(url, body: body, headers: header);
+      if(showLoading){
+        Repository.closeLoadingAlert();
+      }
       print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
+      // print(Repository.BaseURL + path);
+      log('Response body: ${response.body}');
       if (HttpRequest.isSuccessful(response.statusCode)) {
         return jsonDecode(response.body);
       } else {
-        return Future.error(jsonDecode(response.body));
+        ErrorHandler.analize(response);
+        // return Future.error(jsonDecode(response.body));
       }
     } catch (e) {
       print('--++ SERVER ERROR ++--');
       print(e);
-      return Future.error({'message': 'cannot connect to server.'});
+      return Future.error({'message': 'Httprequest parameter error .'});
     }
   }
+
   static Future postFullURL(
-      {required String path, required Map? body, bool? withToken,Map? sheader}) async {
-    withToken = withToken ?? false;
-    sheader=sheader?? {};
+      {required String path,
+      required Map? body,
+      bool? withToken,
+      Map? sheader,
+        bool? showLoading}) async {
+    showLoading=showLoading??false;
+    if(showLoading){
+      Repository.showLoadingAlert();
+    }
+    withToken = withToken ?? true;
+    sheader = sheader ?? {};
     var header = {
       // 'Content-Type': 'application/json',
       'Accept': 'application/json',
     };
 
     if (withToken) {
-      header['Authorization'] = 'Bearer $token';
+      header['Authorization'] = 'Bearer ' + Repository.deviceToken!;
     }
-    if(sheader != {}){
+    if (sheader != {}) {
       sheader.forEach((key, value) {
-        header[key]=value;
+        header[key] = value;
       });
     }
     print('*** BODY IN POST REQUEST ***');
     print(json.encode(body));
-    print( path);
+    print(path);
     try {
       var url = Uri.parse(path);
       print(url);
       var response = await http.post(url, body: body, headers: header);
+      if(showLoading){
+        Repository.closeLoadingAlert();
+      }
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');
       if (HttpRequest.isSuccessful(response.statusCode)) {
         return response.body;
       } else {
-        return Future.error(jsonDecode(response.body));
+        ErrorHandler.analize(response);
+        // return Future.error(jsonDecode(response.body));
       }
     } catch (e) {
       print('--++ SERVER ERROR ++--');
@@ -170,9 +218,8 @@ class HttpRequest {
   }
 
   static bool isSuccessful(code) {
-    return
-        // (code >= 200 && code < 300) ||
-        code == 200;
+    return (code >= 200 && code < 300);
+    // code == 200;
   }
 }
 

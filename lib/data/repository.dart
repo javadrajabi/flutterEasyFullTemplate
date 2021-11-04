@@ -1,91 +1,89 @@
 import 'dart:async';
-
-import 'package:template/data/local/datasources/post/post_datasource.dart';
+import 'package:loader_overlay/loader_overlay.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:template/data/sharedpref/shared_preference_helper.dart';
-import 'package:template/models/post/post.dart';
-import 'package:template/models/post/post_list.dart';
-import 'package:sembast/sembast.dart';
-
-import 'local/constants/db_constants.dart';
-// import 'network/apis/posts/post_api.dart';
 
 class Repository {
-  // data source object
-  final PostDataSource _postDataSource;
+  static String? deviceToken;
 
-  // api objects
-  // final PostApi _postApi;
+  static const String BaseURL = 'http://192.168.1.187/lumen_api/public';
 
-  // shared pref object
-  final SharedPreferenceHelper _sharedPrefsHelper;
+  static final navigatorKey = GlobalKey<NavigatorState>();
 
-  // constructor
-  Repository( this._sharedPrefsHelper, this._postDataSource);
-
-  // Post: ---------------------------------------------------------------------
-  // Future<PostList> getPosts() async {
-  //   // check to see if posts are present in database, then fetch from database
-  //   // else make a network call to get all posts, store them into database for
-  //   // later use
-  //   return await _postApi.getPosts().then((postsList) {
-  //     postsList.posts?.forEach((post) {
-  //       _postDataSource.insert(post);
-  //     });
-  //
-  //     return postsList;
-  //   }).catchError((error) => throw error);
-  // }
-
-  Future<List<Post>> findPostById(int id) {
-    //creating filter
-    List<Filter> filters = [];
-
-    //check to see if dataLogsType is not null
-    Filter dataLogTypeFilter = Filter.equals(DBConstants.FIELD_ID, id);
-    filters.add(dataLogTypeFilter);
-
-    //making db call
-    return _postDataSource
-        .getAllSortedByFilter(filters: filters)
-        .then((posts) => posts)
-        .catchError((error) => throw error);
+  static saveToken(token) {
+    deviceToken = token;
+    SharedPreferenceHelper.saveAuthToken(token);
   }
 
-  Future<int> insert(Post post) => _postDataSource
-      .insert(post)
-      .then((id) => id)
-      .catchError((error) => throw error);
-
-  Future<int> update(Post post) => _postDataSource
-      .update(post)
-      .then((id) => id)
-      .catchError((error) => throw error);
-
-  Future<int> delete(Post post) => _postDataSource
-      .update(post)
-      .then((id) => id)
-      .catchError((error) => throw error);
-
-
-  // Login:---------------------------------------------------------------------
-  Future<bool> login(String email, String password) async {
-    return await Future.delayed(Duration(seconds: 2), ()=> true);
+  static getToken() async {
+    deviceToken = await SharedPreferenceHelper.getAuthToken();
+    return deviceToken;
   }
 
-  Future<void> saveIsLoggedIn(bool value) =>
-      _sharedPrefsHelper.saveIsLoggedIn(value);
+  static showRequestMessage(String text) {
+    showDialog<void>(
+      context: Repository.navigatorKey.currentContext!,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('اخطار'),
+          content: SingleChildScrollView(
+            child: ListBody(children: <Widget>[
+              Text(text),
+            ]),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('تایید'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
-  Future<bool> get isLoggedIn => _sharedPrefsHelper.isLoggedIn;
+  static showLoadingAlert() {
+    if (!Repository.navigatorKey.currentContext!.loaderOverlay.visible ) {
+      Repository.navigatorKey.currentContext!.loaderOverlay.show(
+        widget: Center(
+          child: RefreshProgressIndicator(),
+        )
 
-  // Theme: --------------------------------------------------------------------
-  Future<void> changeBrightnessToDark(bool value) =>
-      _sharedPrefsHelper.changeBrightnessToDark(value);
+      );
+    }
+  }
+  static closeLoadingAlert(){
+    if (Repository.navigatorKey.currentContext!.loaderOverlay.visible ) {
+      Repository.navigatorKey.currentContext!.loaderOverlay.hide();
+    }
 
-  bool get isDarkMode => _sharedPrefsHelper.isDarkMode;
-
-  // Language: -----------------------------------------------------------------
-  Future<void> changeLanguage(String value) =>
-      _sharedPrefsHelper.changeLanguage(value);
-
-  String? get currentLanguage => _sharedPrefsHelper.currentLanguage;
+  }
+// Login:---------------------------------------------------------------------
+// Future<bool> login(String email, String password) async {
+//   return await Future.delayed(Duration(seconds: 2), ()=> true);
+// }
+//
+// Future<void> saveIsLoggedIn(bool value) =>
+//     _sharedPrefsHelper.saveIsLoggedIn(value);
+//
+// Future<bool> get isLoggedIn => _sharedPrefsHelper.isLoggedIn;
+//
+// // Theme: --------------------------------------------------------------------
+// Future changeBrightnessToDark(bool value) {
+//
+//
+// }
+//
+//
+// bool get isDarkMode => _sharedPrefsHelper.isDarkMode;
+//
+// // Language: -----------------------------------------------------------------
+// Future<void> changeLanguage(String value) =>
+//     _sharedPrefsHelper.changeLanguage(value);
+//
+// String? get currentLanguage => _sharedPrefsHelper.currentLanguage;
 }

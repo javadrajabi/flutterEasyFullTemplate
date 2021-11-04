@@ -1,9 +1,9 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sembast/sembast.dart';
 import 'package:sembast/sembast_io.dart';
-import 'package:sembast/utils/value_utils.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sembast_web/sembast_web.dart';
 import 'package:template/data/local/constants/db_constants.dart';
 
 class LocalDB {
@@ -12,9 +12,20 @@ class LocalDB {
   static String path = '/';
   static var db;
   static Future init() async {
-    Directory documentsDirectory = await getApplicationDocumentsDirectory();
-    path = [documentsDirectory.path, DBConstants.DB_NAME].join('/');
-    db = await databaseFactoryIo.openDatabase(path);
+    if(!kIsWeb){
+      Directory documentsDirectory = await getApplicationDocumentsDirectory();
+      path = [documentsDirectory.path, DBConstants.DB_NAME].join('/');
+      db = await databaseFactoryIo.openDatabase(path);
+
+    }else {
+      var store = intMapStoreFactory.store();
+      var factory = databaseFactoryWeb;
+
+      // Open the database
+      db = await factory.openDatabase(DBConstants.DB_NAME);
+    }
+
+
   }
 
   static Future getlocalNodeCount() async {
